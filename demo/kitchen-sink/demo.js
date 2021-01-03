@@ -48,7 +48,6 @@ var env = {};
 var dom = require("ace/lib/dom");
 var net = require("ace/lib/net");
 var lang = require("ace/lib/lang");
-var useragent = require("ace/lib/useragent");
 
 var event = require("ace/lib/event");
 var theme = require("ace/theme/textmate");
@@ -121,6 +120,7 @@ consoleEl.style.cssText = "position:fixed; bottom:1px; right:0;\
 border:1px solid #baf; z-index:100";
 
 var cmdLine = new layout.singleLineEditor(consoleEl);
+cmdLine.setOption("placeholder", "Enter a command...");
 cmdLine.editor = env.editor;
 env.editor.cmdLine = cmdLine;
 
@@ -254,13 +254,22 @@ commands.addCommand({
 
 
 /*********** manage layout ***************************/
-var sidePanelContainer = document.getElementById("sidePanel");
-sidePanelContainer.onclick = function(e) {
+function handleToggleActivate(target) {
     if (dom.hasCssClass(sidePanelContainer, "closed"))
         onResize(null, false);
-    else if (dom.hasCssClass(e.target, "toggleButton"))
+    else if (dom.hasCssClass(target, "toggleButton"))
         onResize(null, true);
-}
+};
+var sidePanelContainer = document.getElementById("sidePanel");
+sidePanelContainer.onclick = function(e) {
+    handleToggleActivate(e.target);
+};
+var optionToggle = document.getElementById("optionToggle");
+optionToggle.onkeydown = function(e) {
+    if (e.code === "Space" || e.code === "Enter") {
+        handleToggleActivate(e.target);
+    }
+};
 var consoleHeight = 20;
 function onResize(e, closeSidePanel) {
     var left = 280;
@@ -268,8 +277,11 @@ function onResize(e, closeSidePanel) {
     var height = document.documentElement.clientHeight;
     if (closeSidePanel == null)
         closeSidePanel = width < 2 * left;
-    if (closeSidePanel)
+    if (closeSidePanel) {
         left = 20;
+        document.getElementById("optionToggle").setAttribute("aria-label", "Show Options");
+    } else
+        document.getElementById("optionToggle").setAttribute("aria-label", "Hide Options");
     width -= left;
     container.style.width = width + "px";
     container.style.height = height - consoleHeight + "px";
